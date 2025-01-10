@@ -99,7 +99,7 @@ if __name__ == "__main__":
         }
         try:
             option_handle[option]()
-        except:
+        except Exception as e:
             print ("-"*sc_width)
             print("Please select a valid option.")
             continue
