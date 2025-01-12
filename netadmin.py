@@ -5,9 +5,10 @@ import sys, os
 online_hosts = [] #list of online hosts; global because for cach
 sc_width = 0 #screen width
 
+
 #options for the menu
 menu_options = {
-    1: 'Display Hosts',
+    1: 'View Hosts',
     2: 'SSH to Host ',
     3: 'Ping Host',
     4: 'Trace Route',
@@ -15,11 +16,7 @@ menu_options = {
     6: 'Edit Settings (IP range, DNS)',
     'q': 'Exit'
 }
-def clear_screen():
-    if (os.name == 'nt'):
-        os.system('cls')
-    else: 
-        os.system('clear')
+
 
 def display_menu(online_hosts):
     
@@ -42,23 +39,23 @@ def scan_network(ip_range):
     online_hosts.scan(hosts=ip_range, arguments='-sn')
 
 def display_hosts():
-    #use setting file in the future
-    #display saved offline hosts too
-
     #display cached online hosts
-    def display():
-        clear_screen()
-        for host in online_hosts.all_hosts():
-            hostname = online_hosts[host]['hostnames'][0]['name'] if online_hosts[host]['hostnames'] else 'N/A'
-            print(f'IP: {host} - {hostname}')
-    display()
+    os.system('cls')
+    print('Currently Online Hosts:')
+    print ("-"*sc_width)
+    for index, host in enumerate(online_hosts.all_hosts(),start=1):
+        hostname = online_hosts[host]['hostnames'][0]['name'] if online_hosts[host]['hostnames'] else 'N/A'
+        print(f'{index}: {host} - {hostname}')
+
+def view_hosts():
+    display_hosts()
     #user input: user can refresh the list, or go back to menu
     while True:
-        user_input = input("\n1: Refresh hosts\nq: Go back to the main menu\n")
-        if user_input == '1':
+        user_input = input("\nr: Refresh hosts\nq: Go back to the main menu\n")
+        if user_input == 'r':
             print ("-"*sc_width)
             scan_network('10.0.0.0/28') #scan network to refresh the cached online hosts
-            display()
+            display_hosts()
         elif user_input == 'q':
             return
         else:
@@ -66,9 +63,25 @@ def display_hosts():
             continue
     
 def ssh():
-    print("ssh to a host")
-    input()
-
+    display_hosts()
+    while True:
+        user_input = input("\nSelect the ID of the host you want to connect to or: \nr: Refresh hosts\nq: Go back to the main menu\n")
+        if user_input == 'r':
+            print ("-"*sc_width)
+            scan_network('10.0.0.0/28') #scan network to refresh the cached online hosts
+            display_hosts()
+        elif user_input == 'q':
+            return
+        elif user_input.isdigit():
+            user_input = int(user_input)
+            for index, host in enumerate(online_hosts.all_hosts(),start=1):
+                if user_input == index:
+                    username = input('Username: ')
+                    command = fr"Echo 'Connecting to {host}...' && ssh {username}@{host}"
+                    os.system(f'start cmd /k "{command}')
+                    return
+        else:
+            print("Invalid option. Please try again.")
 def ping():
     print("ping a host")
     input()
@@ -91,15 +104,15 @@ def exit_program():
 
 
 if __name__ == "__main__":
-    clear_screen()
+    os.system('cls')
     print("Loading NetAdmin v1.0...")
     scan_network('10.0.0.0/28') #initial scan
     while (True):
-        clear_screen()
+        os.system('cls')
         display_menu(len(online_hosts.all_hosts()))
         option = input("\nSelect your option: ").lower()
         option_handle = {
-            '1': display_hosts,
+            '1': view_hosts,
             '2': ssh,
             '3': ping,
             '4': traceroute,
