@@ -18,9 +18,8 @@ menu_options = {
 }
 
 
-def display_menu(online_hosts):
-    
-    header = f"NetAdmin v1.0 \t\t | Online Hosts: {online_hosts}"
+def display_menu():
+    header = f"NetAdmin v1.0 \t\t | Online Hosts: {len(online_hosts.all_hosts())}"
     header = header.expandtabs() #expand tabs to get the correct length
 
     global sc_width #set the screen width for ui formatting
@@ -83,7 +82,24 @@ def ssh():
         else:
             print("Invalid option. Please try again.")
 def ping():
-    print("ping a host")
+    display_hosts()
+    user_input = input(f"\n(1-{len(online_hosts.all_hosts())}): SSH into host \nr: Refresh hosts\nq: Go back to the main menu\n")
+    if user_input == 'r':
+        print ("-"*sc_width)
+        scan_network('10.0.0.0/28') #scan network to refresh the cached online hosts
+        display_hosts()
+    elif user_input == 'q':
+        return
+    elif user_input.isdigit():
+        user_input = int(user_input)
+        for index, host in enumerate(online_hosts.all_hosts(),start=1):
+            if user_input == index:
+                os.system(fr"ping {host}")
+                input("Press enter to continue...")
+                return
+    else:
+        print("Invalid option. Please try again.")
+
     input()
 
 def add():
@@ -109,7 +125,7 @@ if __name__ == "__main__":
     scan_network('10.0.0.0/28') #initial scan
     while (True):
         os.system('cls')
-        display_menu(len(online_hosts.all_hosts()))
+        display_menu()
         option = input("\nSelect your option: ").lower()
         option_handle = {
             '1': view_hosts,
