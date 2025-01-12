@@ -11,7 +11,7 @@ menu_options = {
     1: 'View Hosts',
     2: 'SSH to Host ',
     3: 'Ping Host',
-    4: 'Trace Route',
+    4: 'Add Host',
     5: 'Shutdown / Restart Host',
     6: 'Edit Settings (IP range, DNS)',
     'q': 'Exit'
@@ -65,7 +65,7 @@ def view_hosts():
 def ssh():
     display_hosts()
     while True:
-        user_input = input("\nSelect the ID of the host you want to connect to or: \nr: Refresh hosts\nq: Go back to the main menu\n")
+        user_input = input(f"\n(1-{len(online_hosts.all_hosts())}): SSH into host \nr: Refresh hosts\nq: Go back to the main menu\n")
         if user_input == 'r':
             print ("-"*sc_width)
             scan_network('10.0.0.0/28') #scan network to refresh the cached online hosts
@@ -86,7 +86,7 @@ def ping():
     print("ping a host")
     input()
 
-def traceroute():
+def add():
     print("traceroute a host")
     input()
 
@@ -115,7 +115,7 @@ if __name__ == "__main__":
             '1': view_hosts,
             '2': ssh,
             '3': ping,
-            '4': traceroute,
+            '4': add,
             '5': shutdown,
             '6': edit,
             'q': exit_program
