@@ -1,5 +1,5 @@
 import nmap
-import sys
+import sys, os
 
 #global variables 
 online_hosts = [] #list of online hosts; global because for cach
@@ -15,9 +15,15 @@ menu_options = {
     6: 'Edit Settings (IP range, DNS)',
     'q': 'Exit'
 }
+def clear_screen():
+    if (os.name == 'nt'):
+        os.system('cls')
+    else: 
+        os.system('clear')
 
 def display_menu(online_hosts):
-    header = f"\nNetAdmin v1.0 \t\t | Online Hosts: {online_hosts}"
+    
+    header = f"NetAdmin v1.0 \t\t | Online Hosts: {online_hosts}"
     header = header.expandtabs() #expand tabs to get the correct length
 
     global sc_width #set the screen width for ui formatting
@@ -28,6 +34,7 @@ def display_menu(online_hosts):
     for option in menu_options:
         print(f"{option}. {menu_options[option]}")
 
+
 def scan_network(ip_range):
     print(f"Scanning network {ip_range}...")
     global online_hosts
@@ -37,9 +44,10 @@ def scan_network(ip_range):
 def display_hosts():
     #use setting file in the future
     #display saved offline hosts too
-    print ("-"*sc_width)
+
     #display cached online hosts
     def display():
+        clear_screen()
         for host in online_hosts.all_hosts():
             hostname = online_hosts[host]['hostnames'][0]['name'] if online_hosts[host]['hostnames'] else 'N/A'
             print(f'IP: {host} - {hostname}')
@@ -83,9 +91,11 @@ def exit_program():
 
 
 if __name__ == "__main__":
+    clear_screen()
     print("Loading NetAdmin v1.0...")
     scan_network('10.0.0.0/28') #initial scan
     while (True):
+        clear_screen()
         display_menu(len(online_hosts.all_hosts()))
         option = input("\nSelect your option: ").lower()
         option_handle = {
