@@ -9,6 +9,7 @@ sc_width = 0 #screen width
 #json
 json_file = 'config.json'
 json_data = '' #this is also a cached value
+ip_range = json_data["ip_range"]
 
 #options for the menu
 menu_options = {
@@ -62,7 +63,7 @@ def view_hosts():
         user_input = input("\nr: Refresh hosts\nq: Go back to the main menu\n")
         if user_input == 'r':
             print ("-"*sc_width)
-            scan_network('10.0.0.0/28') #scan network to refresh the cached online hosts
+            scan_network(ip_range) #scan network to refresh the cached online hosts
             display_hosts()
         elif user_input == 'q':
             return
@@ -76,7 +77,7 @@ def ssh():
         user_input = input(f"\n(1-{len(online_hosts.all_hosts())}): SSH into host \nr: Refresh hosts\nq: Go back to the main menu\n")
         if user_input == 'r':
             print ("-"*sc_width)
-            scan_network('10.0.0.0/28') #scan network to refresh the cached online hosts
+            scan_network(ip_range) #scan network to refresh the cached online hosts
             display_hosts()
         elif user_input == 'q':
             return
@@ -95,7 +96,7 @@ def ping():
     user_input = input(f"\n(1-{len(online_hosts.all_hosts())}): SSH into host \nr: Refresh hosts\nq: Go back to the main menu\n")
     if user_input == 'r':
         print ("-"*sc_width)
-        scan_network('10.0.0.0/28') #scan network to refresh the cached online hosts
+        scan_network(ip_range) #scan network to refresh the cached online hosts
         display_hosts()
     elif user_input == 'q':
         return
@@ -118,7 +119,7 @@ def add():
         user_input = input(f"\n(1-{len(online_hosts.all_hosts())}): Add host \nr: Refresh hosts\nq: Go back to the main menu\n")
         if user_input == 'r':   ###Refresh
             print ("-"*sc_width) #Print a line
-            scan_network('10.0.0.0/28') #scan network to refresh the cached online hosts
+            scan_network(ip_range) #scan network to refresh the cached online hosts
             display_hosts() #re-render the new cached hosts
         elif user_input == 'q':    ###Exit 
             return
@@ -140,8 +141,7 @@ def add():
                             json.dump(json_data, file, indent = 4)
                         refresh_json()
                     except Exception as e:
-                        input("There is a problem with the JSON file. You can try to fix it manually (config.json) or restore to default on the 'edit' menu option. \nPress enter to continue...")
-                        return
+                        print("There is a problem with the JSON file. You can try to fix it manually (config.json) or restore to default on the 'edit' menu option.")
                     input("Press enter to continue...")
                     return
         else:
@@ -166,8 +166,7 @@ if __name__ == "__main__":
     os.system('cls')
     print("Loading NetAdmin v1.0...")
     refresh_json() #get config data
-    #ip_range = whatever is on the json config file
-    scan_network('10.0.0.0/28') #initial scan
+    scan_network(ip_range) #initial scan
     while (True):
         os.system('cls')
         display_menu()
