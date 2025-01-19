@@ -17,8 +17,9 @@ menu_options = {
     2: 'SSH to Host ',
     3: 'Ping Host',
     4: 'Add Host',
-    5: 'Shutdown / Restart Host',
-    6: 'Edit Settings (IP range, DNS)',
+    5: 'Turn on Host',
+    6: 'Shutdown / Restart Host',
+    7: 'Edit Settings (IP range, DNS)',
     'q': 'Exit'
 }
 
@@ -39,11 +40,17 @@ def refresh_json():
     print("Loading configuration file...")
     global json_data
     global ip_range
-    
+
     with open(json_file, 'r') as file:
         json_data = json.load(file)
         ip_range = json_data["ip_range"]
 
+def get_json_host(ip):
+    for host in json_data["saved_hosts"]:
+        if host["ip"] == ip:
+            return {"ip":host["ip"], "hostname": host["hostname"], "username":host["username"]}    
+    return None
+        
 def scan_network(ip_range):
     print(f"Scanning network {ip_range}...")
     global online_hosts
@@ -56,7 +63,11 @@ def display_hosts():
     print('Currently Online Hosts:')
     print ("-"*sc_width)
     for index, host in enumerate(online_hosts.all_hosts(),start=1):
-        hostname = online_hosts[host]['hostnames'][0]['name'] if online_hosts[host]['hostnames'] else 'N/A'
+        hostname = get_json_host(host)
+        if not hostname: #check dns hostname if there is no saved hostname
+            hostname = online_hosts[host]['hostnames'][0]['name'] if online_hosts[host]['hostnames'] else 'N/A'
+        else:
+            hostname = hostname["hostname"] + " (saved)"
         print(f'{index}: {host} - {hostname}')
 
 def view_hosts():
@@ -88,7 +99,10 @@ def ssh():
             user_input = int(user_input)
             for index, host in enumerate(online_hosts.all_hosts(),start=1):
                 if user_input == index:
-                    username = input('Username: ')
+                    username = get_json_host(host)
+                    if not username:
+                        username = input('Username: ')
+                    else: username = username['username']
                     command = fr"Echo 'Connecting to {host}...' && ssh {username}@{host}"
                     os.system(f'start cmd /k "{command}')
                     return
@@ -132,6 +146,10 @@ def add():
                 if user_input == index: #if its a valid option
                     print ("-"*sc_width)
                     print(f"Host: {host}")
+                    if get_json_host(host): #host already exists
+                        print("The host already exists. You can try to remove it or edit it on the 'edit' menu option.")
+                        input("Press enter to continue...")
+                        return
                     hostname = input("Enter a hostname: ")
                     username = input("Enter your username for this host (Leave empty if none): ")
                     if hostname == '': hostname = 'N/A'
@@ -150,6 +168,9 @@ def add():
         else:
             print("Invalid option. Please try again.")
             continue
+def turn_on():
+    print("turn on host")
+    input()
 
 def shutdown():
     print("shutdown a host")
@@ -179,8 +200,9 @@ if __name__ == "__main__":
             '2': ssh,
             '3': ping,
             '4': add,
-            '5': shutdown,
-            '6': edit,
+            '5': turn_on,
+            '6': shutdown,
+            '7': edit,
             'q': exit_program
         }
         try:
