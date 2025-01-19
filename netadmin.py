@@ -9,7 +9,7 @@ sc_width = 0 #screen width
 #json
 json_file = 'config.json'
 json_data = '' #this is also a cached value
-ip_range = json_data["ip_range"]
+ip_range = ''
 
 #options for the menu
 menu_options = {
@@ -38,8 +38,11 @@ def display_menu():
 def refresh_json():
     print("Loading configuration file...")
     global json_data
+    global ip_range
+    
     with open(json_file, 'r') as file:
         json_data = json.load(file)
+        ip_range = json_data["ip_range"]
 
 def scan_network(ip_range):
     print(f"Scanning network {ip_range}...")
