@@ -18,7 +18,7 @@ menu_options = {
     3: 'Ping Host',
     4: 'Add Host',
     5: 'Turn on Host',
-    6: 'Shutdown / Restart Host',
+    6: 'Restart Host',
     7: 'Edit Settings (IP range, DNS)',
     'q': 'Exit'
 }
@@ -108,26 +108,26 @@ def ssh():
                     return
         else:
             print("Invalid option. Please try again.")
+
 def ping():
     display_hosts()
-    user_input = input(f"\n(1-{len(online_hosts.all_hosts())}): SSH into host \nr: Refresh hosts\nq: Go back to the main menu\n")
-    if user_input == 'r':
-        print ("-"*sc_width)
-        scan_network(ip_range) #scan network to refresh the cached online hosts
-        display_hosts()
-    elif user_input == 'q':
-        return
-    elif user_input.isdigit():
-        user_input = int(user_input)
-        for index, host in enumerate(online_hosts.all_hosts(),start=1):
-            if user_input == index:
-                os.system(fr"ping {host}")
-                input("Press enter to continue...")
-                return
-    else:
-        print("Invalid option. Please try again.")
-
-    input()
+    while True:
+        user_input = input(f"\n(1-{len(online_hosts.all_hosts())}): SSH into host \nr: Refresh hosts\nq: Go back to the main menu\n")
+        if user_input == 'r':
+            print ("-"*sc_width)
+            scan_network(ip_range) #scan network to refresh the cached online hosts
+            display_hosts()
+        elif user_input == 'q':
+            return
+        elif user_input.isdigit():
+            user_input = int(user_input)
+            for index, host in enumerate(online_hosts.all_hosts(),start=1):
+                if user_input == index:
+                    os.system(fr"ping {host}")
+                    input("Press enter to continue...")
+                    return
+        else:
+            print("Invalid option. Please try again.")
 
 def add():
     display_hosts()
@@ -168,13 +168,31 @@ def add():
         else:
             print("Invalid option. Please try again.")
             continue
+
 def turn_on():
     print("turn on host")
     input()
 
-def shutdown():
-    print("shutdown a host")
-    input()
+def restart():
+    display_hosts()
+    while True:
+        user_input = input(f"\n(1-{len(online_hosts.all_hosts())}): SSH into host \nr: Refresh hosts\nq: Go back to the main menu\n")
+        if user_input == 'r':
+            print ("-"*sc_width)
+            scan_network(ip_range) #scan network to refresh the cached online hosts
+            display_hosts()
+        elif user_input == 'q':
+            return
+        elif user_input.isdigit():
+            user_input = int(user_input)
+            for index, host in enumerate(online_hosts.all_hosts(),start=1):
+                if user_input == index:
+                    os.system(fr"shutdown -r {host}")
+                    print(f"Restarting - {host}...")
+                    input("Press enter to continue...")
+                    return
+        else:
+            print("Invalid option. Please try again.")
 
 def edit():
     #remove, restore to default
@@ -201,7 +219,7 @@ if __name__ == "__main__":
             '3': ping,
             '4': add,
             '5': turn_on,
-            '6': shutdown,
+            '6': restart,
             '7': edit,
             'q': exit_program
         }
