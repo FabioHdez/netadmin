@@ -17,9 +17,11 @@ menu_options = {
     2: 'SSH to Host ',
     3: 'Ping Host',
     4: 'Add Host',
-    5: 'Edit Settings (IP range, DNS)',
+    5: 'Restore to Default',
+    'r': 'Refresh Hosts & Configuration',
     'q': 'Exit'
 }
+
 
 
 def display_menu():
@@ -54,6 +56,9 @@ def scan_network(ip_range):
     global online_hosts
     online_hosts = nmap.PortScanner()
     online_hosts.scan(hosts=ip_range, arguments='-sn')
+    if(len(online_hosts.all_hosts()) == 0):
+        print("\nNo hosts were found. Please edit the config.json file with a valid IP range / restore your config.json file\nAlso make sure that your hosts are online!")
+        input("Press enter to continue...")
 
 def display_hosts():
     #display cached online hosts
@@ -167,22 +172,49 @@ def add():
             print("Invalid option. Please try again.")
             continue
 
-def edit():
-    #remove, restore to default
-    print("edit settings")
-    input()
+def refresh():
+    os.system('cls')
+    print("Refreshing configuration...")
+    print ("-"*sc_width) #Print a line
 
+    refresh_json()
+    scan_network(ip_range)
+
+    input("\nCompleted. Press enter to continue...")
+
+
+def init_config():
+    #set ip range
+    user_ip_range = input("Please set the desired IP range (xxx.xxx.xxx.xxx/xx): ")
+    template = {
+        "ip_range":user_ip_range,
+        "saved_hosts":[]
+    }
+    with open(json_file, 'w') as file:
+        json.dump(template, file, indent=4)
+    
+    print("Initial configuration was loaded.")
+
+def restore():
+    #restore to default
+    print("WARNING: Continuing will remove all the configuration saved onthe config.json file!")
+    confirmation = input("Do you wish to continue? (y/n): ").lower()
+    if (confirmation != 'y' and confirmation != 'yes'):
+        input("Returning to menu. Press enter to continue...")
+        return
+    init_config()
+    refresh()
+    
 def exit_program():
     sys.exit(0)
-
-
 
 if __name__ == "__main__":
     os.system('cls')
     print("Loading NetAdmin v1.0...")
     refresh_json() #get config data
+    if (ip_range == ''):init_config()
     scan_network(ip_range) #initial scan
-    while (True):
+    while True:
         os.system('cls')
         display_menu()
         option = input("\nSelect your option: ").lower()
@@ -191,7 +223,8 @@ if __name__ == "__main__":
             '2': ssh,
             '3': ping,
             '4': add,
-            '5': edit,
+            '5': restore,
+            'r': refresh,
             'q': exit_program
         }
         try:
