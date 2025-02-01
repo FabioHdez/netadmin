@@ -79,18 +79,16 @@ The `config.json` file has the following structure:
 ```json
 {
     "ip_range": "192.168.1.0/24",
-    "saved_hosts": [
-        {
-            "ip": "192.168.1.10",
+    "saved_hosts": {
+        "192.168.1.10": {
             "hostname": "Server01",
             "username": "admin"
         },
-        {
-            "ip": "192.168.1.15",
+        "192.168.1.15": {
             "hostname": "Workstation01",
             "username": "user"
         }
-    ]
+    }
 }
 ```
 

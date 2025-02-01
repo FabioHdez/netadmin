@@ -1,9 +1,8 @@
 import nmap
 import sys, os, json
 
-
 #global variables 
-online_hosts = [] #list of online hosts; global because for cach
+online_hosts = [] #list of online hosts; global because for caching
 sc_width = 0 #screen width
 
 #json
@@ -23,20 +22,24 @@ menu_options = {
 }
 
 
-
 def display_menu():
+    """Display the menu with all the features of the application."""
+
     header = f"NetAdmin v1.0 \t\t | Online Hosts: {len(online_hosts.all_hosts())}"
     header = header.expandtabs() #expand tabs to get the correct length
 
     global sc_width #set the screen width for ui formatting
     sc_width = len(header)
-
+    
+    #Actual output
     print (header)
     print ("-"*sc_width)
     for option in menu_options:
         print(f"{option}. {menu_options[option]}")
 
 def refresh_json():
+    """Update settings from the config.json file. """
+
     print("Loading configuration file...")
     global json_data
     global ip_range
@@ -46,12 +49,15 @@ def refresh_json():
         ip_range = json_data["ip_range"]
 
 def get_json_host(ip):
-    for host in json_data["saved_hosts"]:
-        if host["ip"] == ip:
-            return {"ip":host["ip"], "hostname": host["hostname"], "username":host["username"]}    
-    return None
+    """Get the saved host from the config.json file"""
+    try:
+        host = json_data["saved_hosts"][ip]
+        return {"ip":ip, "hostname": host["hostname"], "username":host["username"]}    
+    except Exception as e:
+        return None
         
 def scan_network(ip_range):
+    """Scan the network using nmap."""
     print(f"Scanning network {ip_range}...")
     global online_hosts
     online_hosts = nmap.PortScanner()
@@ -61,7 +67,7 @@ def scan_network(ip_range):
         input("Press enter to continue...")
 
 def display_hosts():
-    #display cached online hosts
+    """Display cached hosts"""
     os.system('cls')
     print('Currently Online Hosts:')
     print ("-"*sc_width)
@@ -74,6 +80,7 @@ def display_hosts():
         print(f'{index}: {host} - {hostname}')
 
 def view_hosts():
+    """First menu option. Shows all the online hosts"""
     display_hosts()
     #user input: user can refresh the list, or go back to menu
     while True:
@@ -89,6 +96,7 @@ def view_hosts():
             continue
     
 def ssh():
+    """System call to ssh into the host. If the host is saved, it will use the username from the config.json"""
     display_hosts()
     while True:
         user_input = input(f"\n(1-{len(online_hosts.all_hosts())}): SSH into host \nr: Refresh hosts\nq: Go back to the main menu\n")
@@ -113,6 +121,7 @@ def ssh():
             print("Invalid option. Please try again.")
 
 def ping():
+    """System call to ping a host."""
     display_hosts()
     while True:
         user_input = input(f"\n(1-{len(online_hosts.all_hosts())}): SSH into host \nr: Refresh hosts\nq: Go back to the main menu\n")
@@ -133,17 +142,21 @@ def ping():
             print("Invalid option. Please try again.")
 
 def add():
+    """Save a host to the config.json file"""
     display_hosts()
     #user input: user can refresh the list, or go back to menu
     while True:
         user_input = input(f"\n(1-{len(online_hosts.all_hosts())}): Add host \nr: Refresh hosts\nq: Go back to the main menu\n")
-        if user_input == 'r':   ###Refresh
+        #Refresh
+        if user_input == 'r':   
             print ("-"*sc_width) #Print a line
             scan_network(ip_range) #scan network to refresh the cached online hosts
             display_hosts() #re-render the new cached hosts
-        elif user_input == 'q':    ###Exit 
+        #Exit
+        elif user_input == 'q':
             return
-        elif user_input.isdigit():      ###User selected an option
+        #User selected an option
+        elif user_input.isdigit():
             user_input = int(user_input)
             for index, host in enumerate(online_hosts.all_hosts(),start=1):
                 if user_input == index: #if its a valid option
@@ -157,10 +170,8 @@ def add():
                     username = input("Enter your username for this host (Leave empty if none): ")
                     if hostname == '': hostname = 'N/A'
                     print(f"\nAdded: {host} - {hostname}")
-                    #
                     try:
-                        new_host = {'ip': host, 'hostname': hostname, 'username':username}
-                        json_data["saved_hosts"].append(new_host)
+                        json_data["saved_hosts"][host] = {'hostname': hostname, 'username':username}
                         with open(json_file,'w') as file:
                             json.dump(json_data, file, indent = 4)
                         refresh_json()
@@ -173,6 +184,7 @@ def add():
             continue
 
 def refresh():
+    """Full refresh of the configuration and online hosts cache"""
     os.system('cls')
     print("Refreshing configuration...")
     print ("-"*sc_width) #Print a line
@@ -184,11 +196,12 @@ def refresh():
 
 
 def init_config():
+    """Initial configuration for clean installations and restoring to default"""
     #set ip range
     user_ip_range = input("Please set the desired IP range (xxx.xxx.xxx.xxx/xx): ")
     template = {
         "ip_range":user_ip_range,
-        "saved_hosts":[]
+        "saved_hosts":{}
     }
     with open(json_file, 'w') as file:
         json.dump(template, file, indent=4)
@@ -196,6 +209,7 @@ def init_config():
     print("Initial configuration was loaded.")
 
 def restore():
+    """Restore to default menu option."""
     #restore to default
     print("WARNING: Continuing will remove all the configuration saved onthe config.json file!")
     confirmation = input("Do you wish to continue? (y/n): ").lower()
@@ -233,5 +247,3 @@ if __name__ == "__main__":
             print ("-"*sc_width)
             print("Please select a valid option.")
             continue
-
-        
