@@ -1,0 +1,45 @@
+Screen {
+	layout: vertical;
+	background: $surface;
+}
+#titlebar {
+	height: 3;
+	content-align: center middle;
+	background: $boost;
+	color: $text;
+	border: tall $accent;
+}
+#body {
+	height: 1fr;
+	padding: 1;
+	border: round $secondary;
+}
+#left, #right, {
+	height: 100%;
+	padding: 1 1;
+	border: round $surface;
+}
+#left { width: 60%; }
+#right { width: 40%; }
+
+.section-title {
+	height: 1;
+	content-align: left middle;
+	text-style: bold;
+	color: $accent;
+	margin-bottom: 1;
+}
+ListView {
+	scrollbar-size-vertical: 1;
+	padding: 0;
+}
+ListItem {
+	padding: 0 1;
+	height: auto;
+}
+/* Subtle selection styling for UX, still visual only */
+ListItem.-selected {
+	background: $panel;
+	text-style: bold;
+	border: none;
+}
