@@ -5,21 +5,24 @@ from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Footer, Label, ListItem, ListView, Static
 
+import re
+
 
 MENU_OPTIONS = {
-    'opt_1': 'View Hosts',
-    'opt_2': 'SSH to Host ',
-    'opt_3': 'Ping Host',
-    'opt_4': 'Add Host',
-    'opt_d': 'Restore to Default',
-    'opt_r': 'Refresh Hosts & Configuration',
-    'opt_q': 'Exit'
+	'opt_1': 'View Hosts',
+	'opt_2': 'SSH to Host ',
+	'opt_3': 'Ping Host',
+	'opt_4': 'Add Host',
+	'opt_d': 'Restore to Default',
+	'opt_r': 'Refresh Hosts & Configuration',
+	'opt_q': 'Exit'
 }
 
-RIGHT_HOSTS = [
-	" 1: 10.0.0.10  - local.main",
-	" 2: 10.0.0.11  - local.dev",
-]
+HOSTS = {
+	'hst_1':"10.0.0.10 (saved)",
+	'hst_2':"10.0.0.11",
+	'hst_2':"10.0.0.12",
+}
 
 
 class TitleBar(Static):
@@ -40,18 +43,11 @@ class Menu(ListView):
 		for option in MENU_OPTIONS:
 			self.append(ListItem(Label(f"{option[-1]}. {MENU_OPTIONS[option]}"), id=option))
 
-	# print the currently selected menu option
-	def on_list_view_highlighted(self, event: ListView.Selected) -> None:
-		# Get the selected ListItem
-		selected_item = event.item
-		id = selected_item.id
-		print(f"Selected option: {id}")
-
 class HostList(ListView):
 	"""Right list—purely visual."""
 	def on_mount(self) -> None:
-		for line in RIGHT_HOSTS:
-			self.append(ListItem(Label(line)))
+		for host in HOSTS:
+			self.append(ListItem(Label(HOSTS[host]), id=host))
 
 
 class NetAdminUI(App):
@@ -63,30 +59,44 @@ class NetAdminUI(App):
 
 		# Two-column body
 		with Horizontal(id="body"):
-			with Vertical(id="left"):
+			with Vertical():
 				yield Label("Menu", classes="section-title")
-				self.menu = Menu()
+				self.menu = Menu(id="options")
 				yield self.menu
 
-			with Vertical(id="right"):
+			with Vertical():
 				yield Label("Currently Online Hosts:", classes="section-title")
-				self.hosts = HostList()
+				self.hosts = HostList(id="hosts")
 				yield self.hosts
 		yield Footer()
 	
+	def on_list_view_selected(self, event: ListView.Selected) -> None:
+		"""Called when user presses Enter on a ListView item."""
+		selected_item_id = event.item.id
 
+		# ignore items without id
+		if not selected_item_id:
+			return
 
+		# matches for this pattern are only for the options menu
+		options_menu_pattern = r'^opt_(\w)$'
+		selected_item_match = re.match(options_menu_pattern, selected_item_id)
 
-	# Optional: make Tab just flip focus for nicer demo (no logic invoked)
-	# def on_mount(self) -> None:
-	# 	self.set_focus(self.menu)
-				
+		if selected_item_match:
+			selected_option = selected_item_match.group(1)
+			if selected_option.isalpha():
+				print(f"Executing {selected_item_id}")
+			else:
+				self.action_focus_next()
+			return
 
-	# def action_focus_next(self) -> None:  # bound by Footer help
-	#     if self.focused is self.menu:
-	#         self.set_focus(self.hosts)
-	#     else:
-	#         self.set_focus(self.menu)
+		# matches for this pattern are only for the hosts menu
+		hosts_menu_pattern = r'^hst_(\w+)$'
+		selected_item_match = re.match(hosts_menu_pattern, selected_item_id)
+
+		if selected_item_match:
+			options_menu = self.query_one("#options", ListView)	
+			print(f"Executing {options_menu.highlighted_child.id} on {selected_item_id}")
 
 
 if __name__ == "__main__":
