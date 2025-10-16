@@ -19,8 +19,8 @@ Screen {
 	padding: 1 1;
 	border: round $surface;
 }
-#left { width: 60%; }
-#right { width: 40%; }
+#left { width: 70%; }
+#right { width: 30%; }
 
 .section-title {
 	height: 1;

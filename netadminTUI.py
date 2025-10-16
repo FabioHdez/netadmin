@@ -21,7 +21,7 @@ MENU_OPTIONS = {
 HOSTS = {
 	'hst_1':"10.0.0.10 (saved)",
 	'hst_2':"10.0.0.11",
-	'hst_2':"10.0.0.12",
+	'hst_3':"10.0.0.12",
 }
 
 
@@ -52,6 +52,7 @@ class HostList(ListView):
 
 class NetAdminUI(App):
 	CSS_PATH = "netadmin_ui.tcss"
+	BINDINGS = [("backspace", "focus_back", "Return to options menu.")]
 
 	def compose(self) -> ComposeResult:
 		# Top banner
@@ -70,6 +71,24 @@ class NetAdminUI(App):
 				yield self.hosts
 		yield Footer()
 	
+	def on_list_view_highlighted(self, event: ListView.Highlighted) -> None:
+		"""Called when user siwtches on a ListView item."""
+		highlighted_item_id = event.item.id
+
+		# ignore items without id
+		if not highlighted_item_id:
+			return
+
+		options_menu_pattern = r'^opt_(\w)$'
+		highlighted_item_match = re.match(options_menu_pattern, highlighted_item_id)
+
+		if highlighted_item_match:
+			highlighted_option = highlighted_item_match.group(1)
+			if highlighted_option.isalpha():
+				self.query_one("#hosts", ListView).disabled = True
+			else:
+				self.query_one("#hosts", ListView).disabled = False
+
 	def on_list_view_selected(self, event: ListView.Selected) -> None:
 		"""Called when user presses Enter on a ListView item."""
 		selected_item_id = event.item.id
@@ -78,18 +97,24 @@ class NetAdminUI(App):
 		if not selected_item_id:
 			return
 
-		# matches for this pattern are only for the options menu
+		############ OPTIONS ############
+		# matches for this pattern are only for the option menu
 		options_menu_pattern = r'^opt_(\w)$'
 		selected_item_match = re.match(options_menu_pattern, selected_item_id)
 
 		if selected_item_match:
 			selected_option = selected_item_match.group(1)
 			if selected_option.isalpha():
+				# options that do not require host
+				self.query_one("#hosts", ListView).can_focus = False
 				print(f"Executing {selected_item_id}")
 			else:
+				# options that require host
+				self.query_one("#hosts", ListView).can_focus = True
 				self.action_focus_next()
 			return
-
+		
+		############ HOSTS ############
 		# matches for this pattern are only for the hosts menu
 		hosts_menu_pattern = r'^hst_(\w+)$'
 		selected_item_match = re.match(hosts_menu_pattern, selected_item_id)
@@ -97,6 +122,10 @@ class NetAdminUI(App):
 		if selected_item_match:
 			options_menu = self.query_one("#options", ListView)	
 			print(f"Executing {options_menu.highlighted_child.id} on {selected_item_id}")
+			return
+	
+	def action_focus_back(self):
+		self.query_one("#options", ListView).focus()
 
 
 if __name__ == "__main__":
