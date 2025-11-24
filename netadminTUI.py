@@ -1,11 +1,9 @@
 # netadmin_ui.py
-from __future__ import annotations
-
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Footer, Label, ListItem, ListView, Static
 
-import re
+import re, netty, netadminComponents
 
 
 MENU_OPTIONS = {
@@ -13,61 +11,32 @@ MENU_OPTIONS = {
 	'opt_2': 'SSH to Host ',
 	'opt_3': 'Ping Host',
 	'opt_4': 'Add Host',
-	'opt_d': 'Restore to Default',
 	'opt_r': 'Refresh Hosts & Configuration',
+	'opt_d': 'Restore to Default',
 	'opt_q': 'Exit'
 }
-
-HOSTS = {
-	'hst_1':"10.0.0.10 (saved)",
-	'hst_2':"10.0.0.11",
-	'hst_3':"10.0.0.12",
-}
-
-
-class TitleBar(Static):
-	"""Top banner only renders fixed text."""
-	def __init__(self, title: str, version: str, online_count: int) -> None:
-		super().__init__(id="titlebar")
-		self.title = title
-		self.version = version
-		self.online_count = online_count
-
-	def render(self) -> str:
-		return f"{self.title} [b cyan]v{self.version}[/b cyan]  |  Online Hosts: [b cyan]{self.online_count}[/b cyan]"
-
-
-class Menu(ListView):
-	"""Left list—purely visual."""
-	def on_mount(self) -> None:
-		for option in MENU_OPTIONS:
-			self.append(ListItem(Label(f"{option[-1]}. {MENU_OPTIONS[option]}"), id=option))
-
-class HostList(ListView):
-	"""Right list—purely visual."""
-	def on_mount(self) -> None:
-		for host in HOSTS:
-			self.append(ListItem(Label(HOSTS[host]), id=host))
-
 
 class NetAdminUI(App):
 	CSS_PATH = "netadmin_ui.tcss"
 	BINDINGS = [("backspace", "focus_back", "Return to options menu.")]
 
+	def on_mount(self) -> None:
+		pass
+
 	def compose(self) -> ComposeResult:
 		# Top banner
-		yield TitleBar("NetAdmin", version = '2.0', online_count=2)
+		yield netadminComponents.TitleBar("NetAdmin", version = '2.0', online_count=len(netty.online_hosts.all_hosts()))
 
 		# Two-column body
 		with Horizontal(id="body"):
 			with Vertical():
 				yield Label("Menu", classes="section-title")
-				self.menu = Menu(id="options")
+				self.menu = netadminComponents.Menu(id="options")
 				yield self.menu
 
 			with Vertical():
 				yield Label("Currently Online Hosts:", classes="section-title")
-				self.hosts = HostList(id="hosts")
+				self.hosts = netadminComponents.HostList(id="hosts")
 				yield self.hosts
 		yield Footer()
 	
@@ -129,4 +98,15 @@ class NetAdminUI(App):
 
 
 if __name__ == "__main__":
+	# pre load stuff
+	print("Loading NetAdmin v2.0...")
+	try:
+		netty.refresh_json()
+		if (netty.ip_range == ''):raise Exception
+	except Exception as e:
+		print("Issue found with config file. Reconfiguring...")
+		netty.init_config()
+	netty.scan_network(netty.ip_range)
+
+	# run app
 	NetAdminUI().run()
