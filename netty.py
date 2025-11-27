@@ -20,15 +20,22 @@ def create_json():
 
     pass
 
-def init_config():
+def valid_ip(ip_range) -> bool:
+    """Helper function to validate an IP"""
+    ip_range_pattern = r'^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\/(3[0-2]|[12]?\d)$'
+    if re.match(ip_range_pattern,ip_range):
+        return True
+    return False
+
+
+def init_config(user_ip_range = None):
     """Initial configuration for clean installations and restoring to default"""
     #set ip range
-    ip_range_pattern = r'^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\/(3[0-2]|[12]?\d)$'
-    while True:
+    while not user_ip_range:
         user_ip_range = input("Please set the desired IP range (xxx.xxx.xxx.xxx/xx): ")
-        if re.match(ip_range_pattern,user_ip_range):
-            break
-        print("IP range not valid.")
+        if valid_ip(user_ip_range):
+            print("IP range not valid.")
+            user_ip_range = None
     
     template = {
         "ip_range":user_ip_range,

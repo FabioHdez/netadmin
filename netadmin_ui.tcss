@@ -61,3 +61,55 @@ LoadingModal {
 
     text-style: bold;
 }
+
+/* Confirmation modal screen */
+ConfirmationModal {
+    align: center middle;
+    background: rgba(0, 0, 0, 0.50);
+}
+
+/* Main box */
+#confirm-box {
+    width: 100%;
+    height: 6;
+
+    background: $panel;
+    border: round $accent;
+
+    content-align: center middle;
+}
+
+/* Message text */
+#confirm-message {
+    text-align: center;
+    text-style: bold;
+}
+
+/* Text input modal screen */
+InputModal {
+    align: center middle;
+    background: rgba(0, 0, 0, 0.50);
+}
+
+/* Main box */
+#input-box {
+    width: 100%;
+    height: 6;
+
+    background: $panel;
+    border: round $accent;
+
+    content-align: center middle;
+}
+
+/* Message text */
+#input-message {
+    text-align: center;
+    text-style: bold;
+}
+
+/* Input field */
+#input-field {
+
+    width: 50%;
+}

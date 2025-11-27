@@ -8,6 +8,8 @@ from components.Titlebar import TitleBar
 from components.Menu import Menu, MENU_OPTIONS
 from components.HostList import HostList
 from components.LoadingModal import LoadingModal
+from components.ConfirmationModal import ConfirmationModal
+from components.InputModal import InputModal
 
 import re, time
 import netty
@@ -89,7 +91,10 @@ class NetAdmin(App):
 		############ HOSTS ############
 		# matches for this pattern are only for the hosts menu
 		hosts_menu_pattern = r'^\d+\.\d+\.\d+\.\d+$'
-		selected_host:Label = event.item.children[0]
+		try:
+			selected_host:Label = event.item.children[0]
+		except:
+			return
 		selected_host_content = selected_host.content
 
 		selected_item_match = re.match(hosts_menu_pattern, selected_host_content)
@@ -107,24 +112,52 @@ class NetAdmin(App):
 	async def key_space(self):
 		#self.title_bar.update_online_count(self.title_bar.online_count+1)
 		#self.hosts.update_hosts(new_hosts=['127.0.0.1','127.0.0.2','127.0.0.3'])
-		await self.push_screen(LoadingModal())
-		time.sleep(3)
-		await self.pop_screen()
-		self._input_block = False
-		
-	async def option_refresh(self):
-		"""Full refresh of the configuration and online hosts cache"""
-		await self.push_screen(LoadingModal())
+		# await self.push_screen(LoadingModal())
+		# time.sleep(3)
+		# await self.pop_screen()
+		await self.push_screen(InputModal(), callback = lambda result: print(result))
+
+
+	def refresh_ui(self):
+		"""Scan network and refresh ui"""
 		json_data = netty.refresh_json()
 		ip_range = json_data["ip_range"]
 		new_hosts = netty.scan_network(ip_range)
 		self.title_bar.update_online_count(len(new_hosts))
 		self.hosts.update_hosts(new_hosts)
-		await self.pop_screen()
 
-	async def option_restore(self):
-		"""Restore to default"""
-		pass
+	# Refresh
+	async def option_refresh(self):
+		"""Full refresh of the configuration and online hosts cache"""
+		await self.push_screen(LoadingModal())
+		self.refresh_ui() # custom func to refresh the hosts list and the ui
+		await self.pop_screen()
+	
+	# Restore
+	RESTORE_CONFIRM_MSG = "Are you sure you want to restore the configuration to the default?"
+	async def option_restore(self,msg=RESTORE_CONFIRM_MSG):
+		"""Restore configuration to default"""
+		await self.push_screen(ConfirmationModal(message=msg),self.option_restore_confirmation_callback)
+	# callback function for the confirmation modal
+	async def option_restore_confirmation_callback(self, result:bool, message:str = "Enter IP range:"):
+		if result:
+			# TODO new modal FOR IP input!!!!!!!! 
+			# callback for the new modal can be a simple variable assignment with the ip
+			print(result)
+			await self.push_screen(InputModal(message=message),callback=self.option_restore_ip_range_input_callback)
+
+	async def option_restore_ip_range_input_callback(self, result:str):
+		result = result.strip()
+		if result != "" and netty.valid_ip(result):
+			netty.init_config(result)
+			await self.push_screen(LoadingModal())
+			self.refresh_ui() # custom func to refresh the hosts list and the ui
+			await self.pop_screen()
+		else:
+			await self.option_restore(msg=f"Invalid IP Range!\n{self.RESTORE_CONFIRM_MSG}")
+	
+	#Exit
+	
 
 if __name__ == "__main__":
 	print("Loading NetAdmin v2.0...")
