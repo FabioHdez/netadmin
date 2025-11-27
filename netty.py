@@ -10,14 +10,10 @@ online_hosts = [] #list of online hosts; global because for caching
 
 def refresh_json():
     """Update settings from the config.json file. """
-
-    # print("Loading configuration file...")
-    global json_data
-    global ip_range
-
     with open(json_file, 'r') as file:
         json_data = json.load(file)
-        ip_range = json_data["ip_range"]
+        #ip_range = json_data["ip_range"]
+    return json_data
 
 def create_json():
 
@@ -49,8 +45,8 @@ def scan_network(ip_range):
     global online_hosts
     online_hosts = nmap.PortScanner()
     try:
-        online_hosts.scan(hosts=ip_range, arguments='-sn',timeout=30)
+        online_hosts.scan(hosts=ip_range, arguments='-sn',timeout=15)
         if(len(online_hosts.all_hosts()) == 0): raise Exception    
     except Exception:
         print("\nNo hosts were found. Please edit the config.json file with a valid IP range / restore your config.json file\nAlso make sure that your hosts are online!")
-        input("Press enter to continue...")
+    return online_hosts.all_hosts()
