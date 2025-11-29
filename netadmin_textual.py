@@ -1,7 +1,7 @@
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Label, Footer, ListView
-from textual import events
+from textual import work
 
 
 from components.Titlebar import TitleBar
@@ -10,8 +10,9 @@ from components.HostList import HostList
 from components.LoadingModal import LoadingModal
 from components.ConfirmationModal import ConfirmationModal
 from components.InputModal import InputModal
+from components.PingScreen import PingScreen
 
-import re, time
+import re, asyncio
 import netty
 
 
@@ -80,7 +81,8 @@ class NetAdmin(App):
 				print(f"Executing {selected_item_id}")
 				option_handle = {
 					'opt_r': self.option_refresh,
-					'opt_d': self.option_restore
+					'opt_d': self.option_restore,
+					'opt_q': self.option_exit_program
 				}
 				await option_handle[selected_item_id]()
 			else:
@@ -100,8 +102,14 @@ class NetAdmin(App):
 		selected_item_match = re.match(hosts_menu_pattern, selected_host_content)
 
 		if selected_item_match:
-			options_menu = self.query_one("#options", ListView)	
-			print(f"Executing {options_menu.highlighted_child.id} on {selected_host_content}")
+			options_menu = self.query_one("#options", ListView)
+			selected_option = options_menu.highlighted_child.id
+			print(f"Executing {selected_option} on {selected_host_content}")
+			option_handle = {
+				'opt_3': self.option_ping,
+				'opt_4': self.option_add_host
+			}
+			await option_handle[selected_option](selected_host_content)
 			return
 		
 	def action_focus_back(self):
@@ -115,8 +123,10 @@ class NetAdmin(App):
 		# await self.push_screen(LoadingModal())
 		# time.sleep(3)
 		# await self.pop_screen()
-		await self.push_screen(InputModal(), callback = lambda result: print(result))
-
+		# await self.push_screen(InputModal(), callback = lambda result: print(result))
+		# await self.push_screen(PingScreen(host="10.0.0.11"))
+		pass
+		
 
 	def refresh_ui(self):
 		"""Scan network and refresh ui"""
@@ -156,8 +166,18 @@ class NetAdmin(App):
 		else:
 			await self.option_restore(msg=f"Invalid IP Range!\n{self.RESTORE_CONFIRM_MSG}")
 	
-	#Exit
+	# Exit
+	async def option_exit_program(self):
+		self.exit()
 	
+	# Ping
+	async def option_ping(self, host:str):
+		await self.push_screen(PingScreen(host=host))
+		pass
+	# Add
+	async def option_add_host(self, host:str):
+		print(f"adding host {host}")
+		pass
 
 if __name__ == "__main__":
 	print("Loading NetAdmin v2.0...")
