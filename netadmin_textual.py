@@ -12,7 +12,7 @@ from components.ConfirmationModal import ConfirmationModal
 from components.InputModal import InputModal
 from components.PingScreen import PingScreen
 
-import re, asyncio
+import re, os
 import netty
 
 
@@ -104,6 +104,8 @@ class NetAdmin(App):
 			selected_option = options_menu.highlighted_child.id
 			print(f"Executing {selected_option} on {selected_host}")
 			option_handle = {
+				'opt_1': self.option_view,
+				'opt_2': self.option_ssh,
 				'opt_3': self.option_ping,
 				'opt_4': self.option_add
 			}
@@ -123,6 +125,14 @@ class NetAdmin(App):
 		# await self.pop_screen()
 		# await self.push_screen(InputModal(), callback = lambda result: print(result))
 		# await self.push_screen(PingScreen(host="10.0.0.11"))
+		host = "10.0.0.11"
+		username:str = ""
+		if username == r"N\A" or username.strip() == "":
+			command = fr'''start powershell -NoExit -Command "$u = Read-Host 'Username'; ssh $u@{host}"'''
+		else:
+			command = fr'start powershell -NoExit -Command "ssh {username}@{host}"'
+		os.system(command)
+		#os.system("ssh fabio@10.0.0.11")
 		pass
 		
 
@@ -201,6 +211,34 @@ class NetAdmin(App):
 		await self.push_screen(LoadingModal())
 		self.refresh_ui() # custom func to refresh the hosts list and the ui
 		await self.pop_screen()
+	
+	# ssh
+	async def option_ssh(self, host:str):
+		username:str = ""
+		cached_host = netty.get_json_host(json_data, host)
+		if cached_host:
+			username = cached_host["username"]
+		if username.strip() == "":
+			# powershell prompts user for username
+			command = fr'''start powershell -NoExit -Command "$u = Read-Host 'Username'; ssh $u@{host}"'''
+		else:
+			# no username prompting
+			command = fr'start powershell -NoExit -Command "ssh {username}@{host}"'
+		os.system(command)
+		pass
+		
+	# view
+	async def option_view(self, host:str):
+		cached_host = netty.get_json_host(json_data,host)
+		# show modal 
+		if cached_host:
+			print('Saved')
+			print(f'IP: {cached_host["ip"]}')
+			print(f'Hostname: {cached_host["hostname"]}')
+			print(f'Username: {cached_host["username"]}')
+		else:
+			print('Not Saved')
+			print(f'IP: {host}')
 		
 	
 
