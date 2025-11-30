@@ -5,6 +5,13 @@ from textual.screen import ModalScreen
 class ConfirmationModal(ModalScreen[bool]):
 	"""A simple Yes/No confirmation modal."""
 
+	BINDINGS = [
+		("escape", "app.pop_screen", "Close"),
+		("enter", "app.pop_screen", "Close"),
+		("space", "app.pop_screen", "Close")
+	]
+
+
 	def __init__(self, message: str = "Are you sure?"):
 		super().__init__()
 		self.message = message

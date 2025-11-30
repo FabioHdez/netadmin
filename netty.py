@@ -57,3 +57,25 @@ def scan_network(ip_range):
     except Exception:
         print("\nNo hosts were found. Please edit the config.json file with a valid IP range / restore your config.json file\nAlso make sure that your hosts are online!")
     return online_hosts.all_hosts()
+
+def add_host(host: str, hostname: str, username: str):
+    print(f'host: {host}')
+    print(f'hostname: {hostname}')
+    print(f'username: {username}')
+
+    json_data = refresh_json()
+    json_data["saved_hosts"][host] = {'hostname': hostname, 'username':username}
+
+    # raises exception
+    with open(json_file,'w') as file:
+        json.dump(json_data, file, indent = 4)
+
+    return json_data
+
+def get_json_host(json_data, ip):
+    """Get the saved host from the config.json file"""
+    try:
+        host = json_data["saved_hosts"][ip]
+        return {"ip":ip, "hostname": host["hostname"], "username":host["username"]}    
+    except Exception as e:
+        return None

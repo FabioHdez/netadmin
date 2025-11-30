@@ -18,7 +18,7 @@ import netty
 
 all_hosts:list[str] = []
 ip_range:str = ""
-
+json_data = ""
 
 class NetAdmin(App):
 	"""
@@ -40,7 +40,7 @@ class NetAdmin(App):
 				yield self.menu
 			with Vertical():
 				yield Label("Currently Online Hosts:", classes="section-title")
-				self.hosts = HostList(id="hosts",hosts=all_hosts)
+				self.hosts = HostList(id="hosts",hosts=all_hosts, json_data=json_data)
 				yield self.hosts
 		yield Footer()
 	
@@ -93,23 +93,21 @@ class NetAdmin(App):
 		############ HOSTS ############
 		# matches for this pattern are only for the hosts menu
 		hosts_menu_pattern = r'^\d+\.\d+\.\d+\.\d+$'
-		try:
-			selected_host:Label = event.item.children[0]
-		except:
-			return
-		selected_host_content = selected_host.content
+		selected_host = event.item.name
+		if not selected_host or selected_host.strip() == "": return
+		
 
-		selected_item_match = re.match(hosts_menu_pattern, selected_host_content)
+		selected_item_match = re.match(hosts_menu_pattern, selected_host)
 
 		if selected_item_match:
 			options_menu = self.query_one("#options", ListView)
 			selected_option = options_menu.highlighted_child.id
-			print(f"Executing {selected_option} on {selected_host_content}")
+			print(f"Executing {selected_option} on {selected_host}")
 			option_handle = {
 				'opt_3': self.option_ping,
-				'opt_4': self.option_add_host
+				'opt_4': self.option_add
 			}
-			await option_handle[selected_option](selected_host_content)
+			await option_handle[selected_option](selected_host)
 			return
 		
 	def action_focus_back(self):
@@ -130,11 +128,13 @@ class NetAdmin(App):
 
 	def refresh_ui(self):
 		"""Scan network and refresh ui"""
+		global json_data
+		global ip_range
 		json_data = netty.refresh_json()
 		ip_range = json_data["ip_range"]
 		new_hosts = netty.scan_network(ip_range)
 		self.title_bar.update_online_count(len(new_hosts))
-		self.hosts.update_hosts(new_hosts)
+		self.hosts.update_hosts(new_hosts, json_data)
 
 	# Refresh
 	async def option_refresh(self):
@@ -149,9 +149,8 @@ class NetAdmin(App):
 		"""Restore configuration to default"""
 		await self.push_screen(ConfirmationModal(message=msg),self.option_restore_confirmation_callback)
 	# callback function for the confirmation modal
-	async def option_restore_confirmation_callback(self, result:bool, message:str = "Enter IP range:"):
+	async def option_restore_confirmation_callback(self, result:bool, message:str = "Enter IP range: (e.g. 10.0.0.0/27)"):
 		if result:
-			# TODO new modal FOR IP input!!!!!!!! 
 			# callback for the new modal can be a simple variable assignment with the ip
 			print(result)
 			await self.push_screen(InputModal(message=message),callback=self.option_restore_ip_range_input_callback)
@@ -175,9 +174,35 @@ class NetAdmin(App):
 		await self.push_screen(PingScreen(host=host))
 		pass
 	# Add
-	async def option_add_host(self, host:str):
+	async def option_add(self, host:str):
 		print(f"adding host {host}")
-		pass
+		setattr(self,"host", host)
+		message = "Enter a hostname:"
+		# modal to set the hostname
+		await self.push_screen(InputModal(message=message),callback=self.option_add_get_hostname_callback)
+
+	async def option_add_get_hostname_callback(self, result:str):
+		hostname = result.strip()
+		print(f"adding hostname: {hostname}")
+		if hostname == '': hostname = 'N/A'
+		setattr(self,"hostname", hostname)
+		message = "Enter your username for this host (Leave empty if none): "
+		await self.push_screen(InputModal(message=message),callback=self.option_add_get_username_callback)
+
+	async def option_add_get_username_callback(self, result:str):
+		username = result
+		setattr(self,"username", username)
+
+		host = getattr(self,"host",None)
+		hostname = getattr(self,"hostname",None)
+		username = getattr(self,"username",None)
+		
+		netty.add_host(host=host, hostname=hostname, username=username)
+		await self.push_screen(LoadingModal())
+		self.refresh_ui() # custom func to refresh the hosts list and the ui
+		await self.pop_screen()
+		
+	
 
 if __name__ == "__main__":
 	print("Loading NetAdmin v2.0...")

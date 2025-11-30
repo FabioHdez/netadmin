@@ -5,6 +5,12 @@ from textual.screen import ModalScreen
 class InputModal(ModalScreen[str | None]):
 	"""A simple centered text input modal."""
 
+	BINDINGS = [
+		("escape", "app.pop_screen", "Close"),
+		("enter", "app.pop_screen", "Close"),
+		("space", "app.pop_screen", "Close")
+	]
+
 	def __init__(self, message: str = "Enter a value:"):
 		super().__init__()
 		self.message = message
@@ -15,7 +21,7 @@ class InputModal(ModalScreen[str | None]):
 				Static(self.message, id="input-message"),
 				Center(
 					Input(
-						placeholder="e.g. 10.0.0.0/27",
+						#placeholder="e.g. 10.0.0.0/27",
 						id="input-field",
 					)
 				),
