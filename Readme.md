@@ -1,3 +1,10 @@
+# NetAdmin v2.0 🎉
+Updated the User interface from a standard CMD application to a [textual](https://textual.textualize.io/) user interface.
+
+### Version 1 vs Version 2
+The new updated version offers a more detailed user interface with a view of the hosts at all times. Now the host selection does not pull you away from the main menu screen. If a new input is required from the user or a new message needs to be displayed a modal window shows up. The new version also removes the need for text inputs in order to access the features. Overall the NetAdmin v2.0 offers a more fluid experience without giving up on the familiarity of the terminal.
+![Version 1 vs Version 2](images/v1%20and%20v2%20comparison.png)
+
 # NetAdmin v1.0
 
 **NetAdmin v1.0** is a Python-based command-line tool designed to manage and interact with devices on a local network. NetAdmin allows users to scan networks, view online hosts, SSH into devices, ping hosts, and manage configurations seamlessly.
