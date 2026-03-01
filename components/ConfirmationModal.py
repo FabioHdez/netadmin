@@ -6,9 +6,7 @@ class ConfirmationModal(ModalScreen[bool]):
 	"""A simple Yes/No confirmation modal."""
 
 	BINDINGS = [
-		("escape", "app.pop_screen", "Close"),
-		("enter", "app.pop_screen", "Close"),
-		("space", "app.pop_screen", "Close")
+		("escape", "dismiss_false", "Close")
 	]
 
 
@@ -30,6 +28,8 @@ class ConfirmationModal(ModalScreen[bool]):
 				id="confirm-box",
 			)
 		)
+	def action_dismiss_false(self):
+		self.dismiss(False)
 
 	async def on_list_view_selected(self, event: ListView.Selected) -> None:
 		selected_option:Label = event.item.children[0]

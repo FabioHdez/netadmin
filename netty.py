@@ -15,10 +15,6 @@ def refresh_json():
         #ip_range = json_data["ip_range"]
     return json_data
 
-def create_json():
-
-
-    pass
 
 def valid_ip(ip_range) -> bool:
     """Helper function to validate an IP"""
@@ -33,7 +29,7 @@ def init_config(user_ip_range = None):
     #set ip range
     while not user_ip_range:
         user_ip_range = input("Please set the desired IP range (xxx.xxx.xxx.xxx/xx): ")
-        if valid_ip(user_ip_range):
+        if not valid_ip(user_ip_range):
             print("IP range not valid.")
             user_ip_range = None
     
@@ -52,8 +48,8 @@ def scan_network(ip_range):
     global online_hosts
     online_hosts = nmap.PortScanner()
     try:
-        online_hosts.scan(hosts=ip_range, arguments='-sn',timeout=15)
-        if(len(online_hosts.all_hosts()) == 0): raise Exception    
+        online_hosts.scan(hosts=ip_range, arguments='-sn')
+        if(len(online_hosts.all_hosts()) == 0): raise Exception()
     except Exception:
         print("\nNo hosts were found. Please edit the config.json file with a valid IP range / restore your config.json file\nAlso make sure that your hosts are online!")
     return online_hosts.all_hosts()

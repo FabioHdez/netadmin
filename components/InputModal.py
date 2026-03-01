@@ -6,9 +6,7 @@ class InputModal(ModalScreen[str | None]):
 	"""A simple centered text input modal."""
 
 	BINDINGS = [
-		("escape", "app.pop_screen", "Close"),
-		("enter", "app.pop_screen", "Close"),
-		("space", "app.pop_screen", "Close")
+		("escape", "dismiss_false", "Close")
 	]
 
 	def __init__(self, message: str = "Enter a value:"):
@@ -28,6 +26,9 @@ class InputModal(ModalScreen[str | None]):
 				id="input-box",
 			)
 		)
+	def action_dismiss_false(self):
+		self.dismiss(False)
+
 	async def on_input_submitted(self, event: Input.Submitted) -> None:
 		"""Called when user presses Enter in the input."""
 		self.dismiss(event.value)

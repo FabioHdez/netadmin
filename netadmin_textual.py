@@ -114,44 +114,27 @@ class NetAdmin(App):
 		
 	def action_focus_back(self):
 		self.query_one("#options", ListView).focus()
-
-
-	# TODO: DELETE LATER
-	async def key_space(self):
-		#self.title_bar.update_online_count(self.title_bar.online_count+1)
-		#self.hosts.update_hosts(new_hosts=['127.0.0.1','127.0.0.2','127.0.0.3'])
-		# await self.push_screen(LoadingModal())
-		# time.sleep(3)
-		# await self.pop_screen()
-		# await self.push_screen(InputModal(), callback = lambda result: print(result))
-		# await self.push_screen(PingScreen(host="10.0.0.11"))
-		host = "10.0.0.11"
-		username:str = ""
-		if username == r"N\A" or username.strip() == "":
-			command = fr'''start powershell -NoExit -Command "$u = Read-Host 'Username'; ssh $u@{host}"'''
-		else:
-			command = fr'start powershell -NoExit -Command "ssh {username}@{host}"'
-		os.system(command)
-		#os.system("ssh fabio@10.0.0.11")
-		pass
-		
-
+	
+	@work(thread=True)
 	def refresh_ui(self):
-		"""Scan network and refresh ui"""
-		global json_data
-		global ip_range
-		json_data = netty.refresh_json()
-		ip_range = json_data["ip_range"]
-		new_hosts = netty.scan_network(ip_range)
+		"""Scan network in a background thread, then update UI."""
+		new_json = netty.refresh_json()
+		new_hosts = netty.scan_network(new_json["ip_range"])
+		self.call_from_thread(self._apply_scan_results, new_hosts, new_json)
+
+	def _apply_scan_results(self, new_hosts, new_json):
+		global json_data, ip_range
+		json_data = new_json
+		ip_range = new_json["ip_range"]
 		self.title_bar.update_online_count(len(new_hosts))
 		self.hosts.update_hosts(new_hosts, json_data)
+		self.pop_screen()
 
 	# Refresh
 	async def option_refresh(self):
 		"""Full refresh of the configuration and online hosts cache"""
 		await self.push_screen(LoadingModal())
-		self.refresh_ui() # custom func to refresh the hosts list and the ui
-		await self.pop_screen()
+		self.refresh_ui()
 	
 	# Restore
 	RESTORE_CONFIRM_MSG = "Are you sure you want to restore the configuration to the default?"
@@ -170,8 +153,7 @@ class NetAdmin(App):
 		if result != "" and netty.valid_ip(result):
 			netty.init_config(result)
 			await self.push_screen(LoadingModal())
-			self.refresh_ui() # custom func to refresh the hosts list and the ui
-			await self.pop_screen()
+			self.refresh_ui()
 		else:
 			await self.option_restore(msg=f"Invalid IP Range!\n{self.RESTORE_CONFIRM_MSG}")
 	
@@ -209,8 +191,7 @@ class NetAdmin(App):
 		
 		netty.add_host(host=host, hostname=hostname, username=username)
 		await self.push_screen(LoadingModal())
-		self.refresh_ui() # custom func to refresh the hosts list and the ui
-		await self.pop_screen()
+		self.refresh_ui()
 	
 	# ssh
 	async def option_ssh(self, host:str):
